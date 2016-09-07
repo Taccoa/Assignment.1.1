@@ -9,12 +9,17 @@ private:
 	// your private stuff,
 	// implementation details, etc.
 	//
+	size_t bufferSize;
+	bool isProducer;
+	size_t chunkSize;
+	LPCWSTR bufferName;
+
 	struct Header
 	{
 		size_t id;
 		size_t length;
 		size_t padding;
-		// maybe number of consumers here?
+		int consumersLeft;
 	};
 
 public:
@@ -33,5 +38,4 @@ public:
 	bool push(const void* msg, size_t length);
 	bool pop(char* msg, size_t& length);
 };
-
 #endif
