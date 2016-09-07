@@ -3,7 +3,7 @@
 #ifndef CIRCBUFFER_H
 #define CIRCBUFFER_H
 
-class CircBufferFixed
+class CircularBuffer
 {
 private:
 	// your private stuff,
@@ -19,13 +19,13 @@ private:
 
 public:
 	// Constructor
-	CircBufferFixed(
+	CircularBuffer(
 		LPCWSTR buffName,          // unique name
 		const size_t& buffSize,    // size of the whole filemap
 		const bool& isProducer,    // is this buffer going to be used as producer
 		const size_t& chunkSize);  // round up messages to multiple of this.
 	// Destructor
-	~CircBufferFixed();
+	~CircularBuffer();
 
 	size_t canRead();  
 	size_t canWrite(); 
