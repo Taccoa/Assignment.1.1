@@ -10,7 +10,7 @@ void Producer(size_t delay, size_t memorySize, size_t numMessages, size_t msgSiz
 	if (delay > 0)
 		Sleep(delay);
 
-	CircularBuffer(LPCWSTR("Producer1"), memorySize, true, msgSize);
+	CircularBuffer(LPCWSTR("Buffer"), memorySize, true, msgSize);
 }
 
 void Consumer(size_t delay, size_t memorySize, size_t numMessages, size_t msgSize);
@@ -19,7 +19,7 @@ void Consumer(size_t delay, size_t memorySize, size_t numMessages, size_t msgSiz
 	if (delay > 0)
 		Sleep(delay);
 
-	CircularBuffer(LPCWSTR("Consumer1"), memorySize, false, msgSize);
+	CircularBuffer(LPCWSTR("Buffer"), memorySize, false, msgSize);
 }
 
 // shared.exe producer|consumer delay memorySize numMessages random|msgSize
