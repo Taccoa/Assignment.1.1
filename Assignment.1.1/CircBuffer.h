@@ -9,11 +9,6 @@ private:
 	// your private stuff,
 	// implementation details, etc.
 	//
-	size_t bufferSize;
-	bool isProducer;
-	size_t chunkSize;
-	LPCWSTR bufferName;
-
 	struct Header
 	{
 		size_t id;

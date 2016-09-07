@@ -2,10 +2,14 @@
 
 CircBufferFixed::CircBufferFixed(LPCWSTR buffName, const size_t & buffSize, const bool & isProducer, const size_t & chunkSize)
 {
-	this->bufferName = buffName;
-	this->bufferSize = buffSize;
-	this->isProducer = isProducer;
-	this->chunkSize = chunkSize;
+	if (isProducer == false)
+	{
+
+	}
+	else if (isProducer == true)
+	{
+
+	}
 }
 
 CircBufferFixed::~CircBufferFixed(){}
