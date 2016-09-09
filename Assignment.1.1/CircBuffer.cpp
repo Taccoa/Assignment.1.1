@@ -14,6 +14,7 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 	*freeMemory = buffSize;
 
 	bufferSize = buffSize;
+	this->chunkSize = chunkSize;
 	msgID = 0;
 }
 

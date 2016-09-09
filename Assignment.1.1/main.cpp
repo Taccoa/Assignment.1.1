@@ -5,6 +5,9 @@
 using namespace std;
 bool random;
 
+void Producer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize);
+void Consumer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize);
+
 void createRandom(char *s, const int lenght)
 {
 	static const char alphanumber[] =
@@ -18,9 +21,6 @@ void createRandom(char *s, const int lenght)
 	}
 	s[lenght] = 0;
 }
-
-void Producer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize);
-void Consumer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize);
 
 // shared.exe producer|consumer delay memorySize numMessages random|msgSize
 void usage()
@@ -107,7 +107,6 @@ void Consumer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize
 
 	char *msg = new char[maxMessageSize];
 	int counter = 0;
-	int sleep = 0;
 	size_t len0 = 0;
 
 	memset(msg, '\0', maxMessageSize);

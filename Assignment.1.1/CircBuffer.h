@@ -22,6 +22,7 @@ private:
 	size_t* freeMemory;
 
 	size_t bufferSize;
+	size_t chunkSize;
 	
 	size_t msgID;
 
