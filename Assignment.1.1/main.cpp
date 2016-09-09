@@ -3,7 +3,6 @@
 #include "CircBuffer.h"
 
 using namespace std;
-bool random;
 
 void Producer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize);
 void Consumer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize);
@@ -38,16 +37,7 @@ int main(int argc, char* argv[])
 	DWORD Delay = atoi(argv[2]);
 	size_t MemorySize = atoi(argv[3]) * 1<<20;
 	size_t NumberOfMessages = atoi(argv[4]);
-	size_t MessageSize = 0;
-	if (strcmp(argv[5], "random"))
-	{
-		random = true;
-	}
-	else
-	{
-		random = false;
-		MessageSize = atoi(argv[5]);
-	}
+	size_t MessageSize = atoi(argv[5]);
 
 	if (strcmp(argv[1], "producer") == 0)
 	{
@@ -77,7 +67,7 @@ void Producer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize
 			Sleep(delay);
 
 		size_t messageSize = msgSize;
-		if (random)
+		if (messageSize == 0)
 		{
 			messageSize = rand() * (maxMessageSize / RAND_MAX);
 		}

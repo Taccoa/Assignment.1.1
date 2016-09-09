@@ -28,7 +28,11 @@ bool CircularBuffer::push(const void * msg, size_t length)
 {
 	if (length < (*freeMemory - 1))
 	{
-		Header header{ msgID++, length };
+		size_t message_head = length + sizeof(Header);
+		size_t remaining = message_head % chunkSize;
+		size_t padding = chunkSize - remaining;
+		size_t messageSize = sizeof(Header) + length + padding;
+		Header header{ msgID++, length, padding};
 		memcpy(messageData + *head, &header, sizeof(Header));
 		memcpy(messageData + *head + sizeof(Header), msg, length);
 		*freeMemory -= length + sizeof(Header);
