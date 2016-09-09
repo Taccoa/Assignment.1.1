@@ -44,7 +44,7 @@ bool CircularBuffer::push(const void * msg, size_t length)
 
 		Header header{ msgID++, length, padding};
 		memcpy(messageData + *head, &header, sizeof(Header));
-		memcpy(messageData + *head + sizeof(Header), msg, length);
+		memcpy(messageData + *head + sizeof(Header), msg, messageSize);
 		*freeMemory -= messageSize;
 		*head = (*head + messageSize) % bufferSize;
 		return true;
@@ -61,7 +61,8 @@ bool CircularBuffer::pop(char * msg, size_t & length)
 	{
 		Header* h = (Header*)(&messageData[*tail]);
 		length = h->length;
-		memcpy(msg, &messageData[*tail + sizeof(Header)], length);
+		size_t messageSize = sizeof(Header) + h->length + h->padding;
+		memcpy(msg, &messageData[*tail + sizeof(Header)], messageSize);
 		*freeMemory += h->length + sizeof(Header) + h->padding;
 		*tail = (*tail + h->length + sizeof(Header) + h->padding) % bufferSize;
 		return true;
