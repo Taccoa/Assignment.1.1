@@ -3,59 +3,127 @@
 #include "CircBuffer.h"
 
 using namespace std;
+bool random;
 
-void Producer(size_t delay, size_t memorySize, size_t numMessages, size_t msgSize);
-void Producer(size_t delay, size_t memorySize, size_t numMessages, size_t msgSize)
+void createRandom(char *s, const int lenght)
 {
-	if (delay > 0)
-		Sleep(delay);
+	static const char alphanumber[] =
+		"0123456789"
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		"abcdefghijklmnopqrstuvwxyz";
 
-	CircularBuffer(LPCWSTR("Buffer"), memorySize, true, msgSize);
+	for (auto i = 0; i < lenght; i++)
+	{
+		s[i] = alphanumber[rand() % (sizeof(alphanumber) - 1)];
+	}
+	s[lenght] = 0;
 }
 
-void Consumer(size_t delay, size_t memorySize, size_t numMessages, size_t msgSize);
-void Consumer(size_t delay, size_t memorySize, size_t numMessages, size_t msgSize)
-{
-	if (delay > 0)
-		Sleep(delay);
-
-	CircularBuffer(LPCWSTR("Buffer"), memorySize, false, msgSize);
-}
+void Producer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize);
+void Consumer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize);
 
 // shared.exe producer|consumer delay memorySize numMessages random|msgSize
+void usage()
+{
+	cout << "Usage: program [producer|consumer] delay memorySize numberMessages [random|msgSize]" << endl;
+	exit(0);
+}
 
 int main(int argc, char* argv[])
 {
-	HANDLE handleID;
-
 	if (argc < 6)
+		usage();
+
+	DWORD Delay = atoi(argv[2]);
+	size_t MemorySize = atoi(argv[3]) * 1<<20;
+	size_t NumberOfMessages = atoi(argv[4]);
+	size_t MessageSize = 0;
+	if (strcmp(argv[5], "random"))
 	{
-		cout << "Wrong number of aguments" << endl;
+		random = true;
 	}
 	else
 	{
-		size_t Delay = atoi(argv[2]);
-		size_t MemorySize = atoi(argv[3]);
-		size_t NumberOfMessages = atoi(argv[4]);
-		size_t MessageSize;
-		if (strcmp(argv[5], "random"))
+		random = false;
+		MessageSize = atoi(argv[5]);
+	}
+
+	if (strcmp(argv[1], "producer") == 0)
+	{
+		Producer(Delay, MemorySize, NumberOfMessages, MessageSize);
+	}
+	if (strcmp(argv[1], "consumer") == 0)
+	{
+		Consumer(Delay, MemorySize, NumberOfMessages, MessageSize);
+	}
+	
+	return 0;
+}
+
+void Producer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize)
+{
+	size_t maxMessageSize = 32 * 1<<20;// read the assignment to know exactly how to define the correct value for this variable.
+	size_t chunkSize = 256;
+
+	CircularBuffer producer = CircularBuffer(L"Buffer", memorySize, true, chunkSize);
+
+	char *buff = new char[maxMessageSize];
+	int counter = 0;
+
+	while (counter < numMessages)
+	{
+		if (delay != 0)
+			Sleep(delay);
+
+		size_t messageSize = msgSize;
+		if (random)
 		{
-			//RANDOM
+			messageSize = rand() * (maxMessageSize / RAND_MAX);
+		}
+
+		createRandom((char*)buff, messageSize);
+
+		while (true)
+		{
+			if (producer.push(buff, messageSize))
+			{
+				counter++;
+				break;
+			}
+			else
+				Sleep(1);
+		}
+	};
+	Sleep(1000);
+}
+
+void Consumer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize)
+{
+	size_t maxMessageSize = 32 * 1 << 20;// read the assignment to know exactly how to define the correct value for this variable.
+	size_t chunkSize = 256;
+
+	CircularBuffer consumer = CircularBuffer(L"Buffer", memorySize, false, chunkSize);
+
+	char *msg = new char[maxMessageSize];
+	int counter = 0;
+	int sleep = 0;
+	size_t len0 = 0;
+
+	memset(msg, '\0', maxMessageSize);
+
+	while (counter < numMessages)
+	{
+		if (delay > 0)
+			Sleep(delay);
+
+		if (consumer.pop(msg, len0))
+		{
+			counter++;
 		}
 		else
 		{
-			MessageSize = atoi(argv[5]);
-		}
-
-		if (strcmp(argv[1], "producer") == 0)
-		{
-			Producer(Delay, MemorySize, NumberOfMessages, MessageSize);
-		}
-		else if (strcmp(argv[1], "consumer") == 0)
-		{
-			Consumer(Delay, MemorySize, NumberOfMessages, MessageSize);
+			Sleep(1);
 		}
 	}
-
-	return 0;
+	delete[] msg;
 }
