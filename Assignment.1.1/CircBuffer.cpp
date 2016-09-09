@@ -3,14 +3,23 @@
 CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const bool & isProducer, const size_t & chunkSize)
 {
 	messageData = new char[buffSize];
-	controlData = new size_t[3];
+	controlData = new size_t[4];
 
 	head = controlData;
 	tail = head + 1;
-	freeMemory = tail + 1;
+	clients = tail + 1;
+	freeMemory = clients + 1;
 
 	*head = 0;
 	*tail = 0;
+	//if (/*first*/)
+	//{
+	//	*clients = 0;
+	//}
+	if (isProducer == false)
+	{
+		*clients += 1;
+	}
 	*freeMemory = buffSize;
 
 	bufferSize = buffSize;

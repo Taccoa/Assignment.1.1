@@ -19,6 +19,7 @@ private:
 
 	size_t* head;
 	size_t* tail;
+	size_t* clients;
 	size_t* freeMemory;
 
 	size_t bufferSize;
