@@ -26,6 +26,7 @@ void Consumer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize
 void usage()
 {
 	cout << "Usage: program [producer|consumer] delay memorySize numberMessages [random|msgSize]" << endl;
+	cin.get();
 	exit(0);
 }
 
