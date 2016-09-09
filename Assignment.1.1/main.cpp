@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
 
 void Producer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize)
 {
-	size_t maxMessageSize = 32 * 1<<20;// read the assignment to know exactly how to define the correct value for this variable.
+	size_t maxMessageSize = memorySize / 4;
 	size_t chunkSize = 256;
 
 	CircularBuffer producer = CircularBuffer(L"Buffer", memorySize, true, chunkSize);
@@ -100,7 +100,7 @@ void Producer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize
 
 void Consumer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize)
 {
-	size_t maxMessageSize = 32 * 1 << 20;// read the assignment to know exactly how to define the correct value for this variable.
+	size_t maxMessageSize = memorySize / 4;
 	size_t chunkSize = 256;
 
 	CircularBuffer consumer = CircularBuffer(L"Buffer", memorySize, false, chunkSize);
