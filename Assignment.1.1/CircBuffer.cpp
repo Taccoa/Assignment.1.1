@@ -2,17 +2,60 @@
 
 CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const bool & isProducer, const size_t & chunkSize)
 {
-	if (isProducer == false)
-	{
+	messageData = new char[buffSize];
+	controlData = new size_t[3];
 
+	head = controlData;
+	tail = head + 1;
+	freeMemory = tail + 1;
+
+	*head = 0;
+	*tail = 0;
+	*freeMemory = buffSize;
+
+	bufferSize = buffSize;
+	msgID = 0;
+}
+
+CircularBuffer::~CircularBuffer()
+{
+	delete[] messageData;
+	delete[] controlData;
+}
+
+bool CircularBuffer::push(const void * msg, size_t length)
+{
+	if (length < (*freeMemory - 1))
+	{
+		Header header{ msgID++, length };
+		memcpy(messageData + *head, &header, sizeof(Header));
+		memcpy(messageData + *head + sizeof(Header), msg, length);
+		*freeMemory -= length + sizeof(Header);
+		*head = (*head + length + sizeof(Header)) % bufferSize;
+		return true;
 	}
-	else if (isProducer == true)
+	else
 	{
-
+		return false;
 	}
 }
 
-CircularBuffer::~CircularBuffer(){}
+bool CircularBuffer::pop(char * msg, size_t & length)
+{
+	if (*freeMemory < bufferSize)
+	{
+		Header* h = (Header*)(&messageData[*tail]);
+		length = h->length;
+		memcpy(msg, &messageData[*tail + sizeof(Header)], length);
+		*freeMemory += h->length + sizeof(Header);
+		*tail = (*tail + h->length + sizeof(Header)) % bufferSize;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
 
 size_t CircularBuffer::canRead()
 {
@@ -24,20 +67,4 @@ size_t CircularBuffer::canWrite()
 {
 	// returns how many bytes are free in the buffer.
 	return size_t();
-}
-
-bool CircularBuffer::push(const void * msg, size_t length)
-{
-	// try to send a message through the buffer,
-	// if returns true then it succeeded, otherwise the message has not been sent.
-	// it should return false if the buffer does not have enough space.
-	return false;
-}
-
-bool CircularBuffer::pop(char * msg, size_t & length)
-{
-	// try to read a message from the buffer, and the implementation puts the content
-	// in the memory. The memory is expected to be allocated by the program that calls
-	// this function.
-	return false;
 }

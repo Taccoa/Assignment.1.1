@@ -6,9 +6,6 @@
 class CircularBuffer
 {
 private:
-	// your private stuff,
-	// implementation details, etc.
-	//
 	struct Header
 	{
 		size_t id;
@@ -17,18 +14,23 @@ private:
 		int consumersLeft;
 	};
 
-public:
-	// Constructor
-	CircularBuffer(
-		LPCWSTR buffName,          // unique name
-		const size_t& buffSize,    // size of the whole filemap
-		const bool& isProducer,    // is this buffer going to be used as producer
-		const size_t& chunkSize);  // round up messages to multiple of this.
-	// Destructor
-	~CircularBuffer();
+	char* messageData;
+	size_t* controlData;
 
-	size_t canRead();  
-	size_t canWrite(); 
+	size_t* head;
+	size_t* tail;
+	size_t* freeMemory;
+
+	size_t bufferSize;
+	
+	size_t msgID;
+
+	size_t canRead();
+	size_t canWrite();
+
+public:
+	CircularBuffer(LPCWSTR buffName, const size_t& buffSize, const bool& isProducer, const size_t& chunkSize);
+	~CircularBuffer();
 					   
 	bool push(const void* msg, size_t length);
 	bool pop(char* msg, size_t& length);
