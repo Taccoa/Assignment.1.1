@@ -18,7 +18,7 @@ void createRandom(char *s, const int lenght)
 	{
 		s[i] = alphanumber[rand() % (sizeof(alphanumber) - 1)];
 	}
-	s[lenght] = 0;
+	s[lenght-1] = 0;
 }
 
 class Mutex {
