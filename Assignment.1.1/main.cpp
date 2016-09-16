@@ -21,28 +21,6 @@ void createRandom(char *s, const int lenght)
 	s[lenght-1] = 0;
 }
 
-class Mutex {
-private:
-	HANDLE handle;
-public:
-	Mutex(LPCWSTR name)
-	{
-		handle = CreateMutex(nullptr, false, name);
-	}
-	~Mutex()
-	{
-		ReleaseMutex(handle);
-	}
-	void Lock(DWORD milliseconds = INFINITE)
-	{
-		WaitForSingleObject(handle, milliseconds);
-	}
-	void Unlock()
-	{
-		ReleaseMutex(handle);
-	}
-};
-
 // shared.exe producer|consumer delay memorySize numMessages random|msgSize
 void usage()
 {
@@ -75,8 +53,6 @@ int main(int argc, char* argv[])
 
 void Producer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize)
 {
-	//Mutex myMutex(L"myMutex");
-	//myMutex.Lock();
 	size_t maxMessageSize = memorySize / 4;
 	size_t chunkSize = 256;
 
@@ -110,7 +86,6 @@ void Producer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize
 		}
 	};
 	Sleep(1000);
-	//myMutex.Unlock();
 }
 
 void Consumer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize)
