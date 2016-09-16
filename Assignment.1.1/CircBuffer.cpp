@@ -40,6 +40,9 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 	HANDLE hMapFile;
 	LPCTSTR pBuf;
 
+	HANDLE controlFileMap;
+	LPCTSTR controlpBuf;
+
 	hMapFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, buffSize, buffName);
 	if (hMapFile == NULL)
 	{
@@ -54,6 +57,20 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 		}
 	}
 
+	controlFileMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(controlData), L"control");
+	if (controlFileMap == NULL)
+	{
+		_tprintf(TEXT("Could not create file mapping object (%d).\n"), GetLastError());
+	}
+	if (GetLastError() == ERROR_ALREADY_EXISTS)
+	{
+		controlFileMap = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, L"control");
+		if (controlFileMap == NULL)
+		{
+			_tprintf(TEXT("Could not open file mapping object (%d).\n"), GetLastError());
+		}
+	}
+
 	pBuf = (LPTSTR)MapViewOfFile(hMapFile, FILE_MAP_ALL_ACCESS, 0, 0, buffSize);
 	if (pBuf == NULL)
 	{
@@ -61,11 +78,21 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 		CloseHandle(hMapFile);
 	}
 
+	controlpBuf = (LPTSTR)MapViewOfFile(controlFileMap, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(controlData));
+	if (controlpBuf == NULL)
+	{
+		_tprintf(TEXT("Could not map view of file (%d).\n"), GetLastError());
+		CloseHandle(controlFileMap);
+	}
+
 	/*CopyMemory((PVOID)pBuf, szMsg, (_tcslen(szMsg) * sizeof(TCHAR)));
 	_getch();*/
 
 	UnmapViewOfFile(pBuf);
 	CloseHandle(hMapFile);
+
+	UnmapViewOfFile(controlpBuf);
+	CloseHandle(controlFileMap);
 
 	
 	if (isProducer == true)
