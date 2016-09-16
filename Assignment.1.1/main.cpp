@@ -26,7 +26,7 @@ void usage()
 {
 	cout << "Usage: program [producer|consumer] delay memorySize numberMessages [random|msgSize]" << endl;
 	cin.get();
-	exit(0);
+	exit(1);
 }
 
 int main(int argc, char* argv[])
