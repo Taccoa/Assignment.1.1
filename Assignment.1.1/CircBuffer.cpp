@@ -61,8 +61,8 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 		CloseHandle(hMapFile);
 	}
 
-	CopyMemory((PVOID)pBuf, szMsg, (_tcslen(szMsg) * sizeof(TCHAR)));
-	_getch();
+	/*CopyMemory((PVOID)pBuf, szMsg, (_tcslen(szMsg) * sizeof(TCHAR)));
+	_getch();*/
 
 	UnmapViewOfFile(pBuf);
 	CloseHandle(hMapFile);
@@ -102,7 +102,7 @@ bool CircularBuffer::push(const void * msg, size_t length)
 		size_t padding = chunkSize - remaining;
 		size_t messageSize = sizeof(Header) + length + padding;
 
-		Header header{ msgID++, length, padding};
+		Header header{ msgID++, length, padding, *clients};
 		memcpy(messageData + *head, &header, sizeof(Header));
 		memcpy(messageData + *head + sizeof(Header), msg, messageSize);
 		*freeMemory -= messageSize;
@@ -126,8 +126,12 @@ bool CircularBuffer::pop(char * msg, size_t & length)
 		length = h->length;
 		size_t messageSize = sizeof(Header) + h->length + h->padding;
 		memcpy(msg, &messageData[*tail + sizeof(Header)], messageSize);
-		*freeMemory += h->length + sizeof(Header) + h->padding;
-		*tail = (*tail + h->length + sizeof(Header) + h->padding) % bufferSize;
+		h->consumersLeft -= 1;
+		if (h->consumersLeft == 0)
+		{
+			*freeMemory += h->length + sizeof(Header) + h->padding;
+			*tail = (*tail + h->length + sizeof(Header) + h->padding) % bufferSize;
+		}
 		myMutex.Unlock();
 		return true;
 	}
