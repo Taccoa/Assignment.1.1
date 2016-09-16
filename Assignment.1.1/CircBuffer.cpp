@@ -1,4 +1,7 @@
 #include "CircBuffer.h"
+#include <conio.h>
+#include <tchar.h>
+#include <stdio.h>
 
 CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const bool & isProducer, const size_t & chunkSize)
 {
@@ -10,20 +13,49 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 	clients = tail + 1;
 	freeMemory = clients + 1;
 
-	*head = 0;
-	*tail = 0;
-	//if (/*first*/)
-	//{
-	//	*clients = 0;
-	//}
+	TCHAR szMsg[] = TEXT("Message from first process.");
+
+	HANDLE hMapFile;
+	LPCTSTR pBuf;
+
+	hMapFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, buffSize, buffName);
+	if (hMapFile == NULL)
+	{
+		_tprintf(TEXT("Could not create file mapping object (%d).\n"), GetLastError());
+	}
+	if (GetLastError() == ERROR_ALREADY_EXISTS)
+	{
+
+	}
+
+	pBuf = (LPTSTR)MapViewOfFile(hMapFile, FILE_MAP_ALL_ACCESS, 0, 0, buffSize);
+	if (pBuf == NULL)
+	{
+		_tprintf(TEXT("Could not map view of file (%d).\n"), GetLastError());
+		CloseHandle(hMapFile);
+	}
+
+	CopyMemory((PVOID)pBuf, szMsg, (_tcslen(szMsg) * sizeof(TCHAR)));
+	_getch();
+
+	UnmapViewOfFile(pBuf);
+	CloseHandle(hMapFile);
+
+	
+	if (isProducer == true)
+	{
+		*head = 0;
+		*tail = 0;
+		*clients = 0;
+		*freeMemory = buffSize;
+	}
 	if (isProducer == false)
 	{
 		*clients += 1;
 	}
-	*freeMemory = buffSize;
 
-	bufferSize = buffSize;
 	this->chunkSize = chunkSize;
+	bufferSize = buffSize;
 	msgID = 0;
 }
 
