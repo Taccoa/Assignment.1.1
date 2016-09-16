@@ -30,11 +30,6 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 	messageData = new char[buffSize];
 	controlData = new size_t[4];
 
-	head = controlData;
-	tail = head + 1;
-	clients = tail + 1;
-	freeMemory = clients + 1;
-
 	/*TCHAR szMsg[] = TEXT("Message from first process.");*/
 
 	HANDLE hMapFile;
@@ -94,6 +89,10 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 	UnmapViewOfFile(controlpBuf);
 	CloseHandle(controlFileMap);
 
+	head = controlData;
+	tail = head + 1;
+	clients = tail + 1;
+	freeMemory = clients + 1;
 	
 	if (isProducer == true)
 	{
