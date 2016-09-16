@@ -35,7 +35,7 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 	clients = tail + 1;
 	freeMemory = clients + 1;
 
-	TCHAR szMsg[] = TEXT("Message from first process.");
+	/*TCHAR szMsg[] = TEXT("Message from first process.");*/
 
 	HANDLE hMapFile;
 	LPCTSTR pBuf;
