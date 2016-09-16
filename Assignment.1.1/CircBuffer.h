@@ -27,9 +27,6 @@ private:
 	
 	size_t msgID;
 
-	size_t canRead();
-	size_t canWrite();
-
 public:
 	CircularBuffer(LPCWSTR buffName, const size_t& buffSize, const bool& isProducer, const size_t& chunkSize);
 	~CircularBuffer();

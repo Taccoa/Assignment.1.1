@@ -140,15 +140,3 @@ bool CircularBuffer::pop(char * msg, size_t & length)
 		return false;
 	}
 }
-
-size_t CircularBuffer::canRead()
-{
-	// returns how many bytes are available for reading.
-	return size_t();
-}
-
-size_t CircularBuffer::canWrite()
-{
-	// returns how many bytes are free in the buffer.
-	return size_t();
-}
