@@ -38,10 +38,22 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 	HANDLE controlFileMap;
 	LPCTSTR controlpBuf;
 
+	head = controlData;
+	tail = head + 1;
+	clients = tail + 1;
+	freeMemory = clients + 1;
+
 	hMapFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, buffSize, buffName);
 	if (hMapFile == NULL)
 	{
 		_tprintf(TEXT("Could not create file mapping object (%d).\n"), GetLastError());
+	}
+	if (GetLastError() != ERROR_ALREADY_EXISTS)
+	{
+		*head = 0;
+		*tail = 0;
+		*clients = 0;
+		*freeMemory = buffSize;
 	}
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
@@ -88,19 +100,7 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 
 	UnmapViewOfFile(controlpBuf);
 	CloseHandle(controlFileMap);
-
-	head = controlData;
-	tail = head + 1;
-	clients = tail + 1;
-	freeMemory = clients + 1;
 	
-	if (isProducer == true)
-	{
-		*head = 0;
-		*tail = 0;
-		*clients = 0;
-		*freeMemory = buffSize;
-	}
 	if (isProducer == false)
 	{
 		*clients += 1;
