@@ -16,6 +16,8 @@ private:
 
 	char* messageData;
 	size_t* controlData;
+	char* message;
+	size_t* control;
 
 	size_t* head;
 	size_t* tail;

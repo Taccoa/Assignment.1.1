@@ -27,52 +27,33 @@ public:
 
 CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const bool & isProducer, const size_t & chunkSize)
 {
-	messageData = new char[buffSize];
-	controlData = new size_t[4];
+	message = new char[buffSize];
+	control = new size_t[4];
 
 	HANDLE hMapFile;
-	LPCTSTR pBuf;
-
 	HANDLE controlFileMap;
-	LPCTSTR controlpBuf;
 
 	hMapFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, buffSize, buffName);
 	if (hMapFile == NULL)
 	{
 		_tprintf(TEXT("Could not create file mapping object (%d).\n"), GetLastError());
 	}
-	if (GetLastError() == ERROR_ALREADY_EXISTS)
-	{
-		hMapFile = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, buffName);
-		if (hMapFile == NULL)
-		{
-			_tprintf(TEXT("Could not open file mapping object (%d).\n"), GetLastError());
-		}
-	}
 
-	controlFileMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(controlData), L"control");
+	controlFileMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(control), L"control");
 	if (controlFileMap == NULL)
 	{
 		_tprintf(TEXT("Could not create file mapping object (%d).\n"), GetLastError());
 	}
-	if (GetLastError() == ERROR_ALREADY_EXISTS)
-	{
-		controlFileMap = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, L"control");
-		if (controlFileMap == NULL)
-		{
-			_tprintf(TEXT("Could not open file mapping object (%d).\n"), GetLastError());
-		}
-	}
 
-	pBuf = (LPTSTR)MapViewOfFile(hMapFile, FILE_MAP_ALL_ACCESS, 0, 0, buffSize);
-	if (pBuf == NULL)
+	messageData = (char*)MapViewOfFile(hMapFile, FILE_MAP_ALL_ACCESS, 0, 0, buffSize);
+	if (messageData == NULL)
 	{
 		_tprintf(TEXT("Could not map view of file (%d).\n"), GetLastError());
 		CloseHandle(hMapFile);
 	}
 
-	controlData = (size_t*)MapViewOfFile(controlFileMap, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(controlData));
-	if (controlpBuf == NULL)
+	controlData = (size_t*)MapViewOfFile(controlFileMap, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(control));
+	if (controlData == NULL)
 	{
 		_tprintf(TEXT("Could not map view of file (%d).\n"), GetLastError());
 		CloseHandle(controlFileMap);
@@ -91,15 +72,15 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 		*freeMemory = buffSize;
 	}
 
-	UnmapViewOfFile(pBuf);
 	CloseHandle(hMapFile);
-
-	UnmapViewOfFile(controlpBuf);
 	CloseHandle(controlFileMap);
 	
 	if (isProducer == false)
 	{
+		Mutex myMutex(L"myMutex");
+		myMutex.Lock();
 		*clients += 1;
+		myMutex.Unlock();
 	}
 
 	this->chunkSize = chunkSize;
@@ -109,8 +90,10 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 
 CircularBuffer::~CircularBuffer()
 {
-	delete[] messageData;
-	delete[] controlData;
+	UnmapViewOfFile(messageData);
+	UnmapViewOfFile(controlData);
+	delete[] message;
+	delete[] control;
 }
 
 bool CircularBuffer::push(const void * msg, size_t length)
