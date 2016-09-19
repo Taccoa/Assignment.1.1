@@ -30,30 +30,16 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 	messageData = new char[buffSize];
 	controlData = new size_t[4];
 
-	/*TCHAR szMsg[] = TEXT("Message from first process.");*/
-
 	HANDLE hMapFile;
 	LPCTSTR pBuf;
 
 	HANDLE controlFileMap;
 	LPCTSTR controlpBuf;
 
-	head = controlData;
-	tail = head + 1;
-	clients = tail + 1;
-	freeMemory = clients + 1;
-
 	hMapFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, buffSize, buffName);
 	if (hMapFile == NULL)
 	{
 		_tprintf(TEXT("Could not create file mapping object (%d).\n"), GetLastError());
-	}
-	if (GetLastError() != ERROR_ALREADY_EXISTS)
-	{
-		*head = 0;
-		*tail = 0;
-		*clients = 0;
-		*freeMemory = buffSize;
 	}
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
@@ -85,15 +71,25 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 		CloseHandle(hMapFile);
 	}
 
-	controlpBuf = (LPTSTR)MapViewOfFile(controlFileMap, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(controlData));
+	controlData = (size_t*)MapViewOfFile(controlFileMap, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(controlData));
 	if (controlpBuf == NULL)
 	{
 		_tprintf(TEXT("Could not map view of file (%d).\n"), GetLastError());
 		CloseHandle(controlFileMap);
 	}
 
-	/*CopyMemory((PVOID)pBuf, szMsg, (_tcslen(szMsg) * sizeof(TCHAR)));
-	_getch();*/
+	head = controlData;
+	tail = head + 1;
+	clients = tail + 1;
+	freeMemory = clients + 1;
+
+	if (GetLastError() != ERROR_ALREADY_EXISTS)
+	{
+		*head = 0;
+		*tail = 0;
+		*clients = 0;
+		*freeMemory = buffSize;
+	}
 
 	UnmapViewOfFile(pBuf);
 	CloseHandle(hMapFile);
@@ -121,8 +117,6 @@ bool CircularBuffer::push(const void * msg, size_t length)
 {
 	if (length < (*freeMemory - 1))
 	{
-		Mutex myMutex(L"myMutex");
-		myMutex.Lock();
 		size_t message_head = length + sizeof(Header);
 		size_t remaining = message_head % chunkSize;
 		size_t padding = chunkSize - remaining;
@@ -131,6 +125,8 @@ bool CircularBuffer::push(const void * msg, size_t length)
 		Header header{ msgID++, length, padding, *clients};
 		memcpy(messageData + *head, &header, sizeof(Header));
 		memcpy(messageData + *head + sizeof(Header), msg, messageSize);
+		Mutex myMutex(L"myMutex");
+		myMutex.Lock();
 		*freeMemory -= messageSize;
 		*head = (*head + messageSize) % bufferSize;
 		myMutex.Unlock();
@@ -146,12 +142,12 @@ bool CircularBuffer::pop(char * msg, size_t & length)
 {
 	if (*freeMemory < bufferSize)
 	{
-		Mutex myMutex(L"myMutex");
-		myMutex.Lock();
 		Header* h = (Header*)(&messageData[*tail]);
 		length = h->length;
 		size_t messageSize = sizeof(Header) + h->length + h->padding;
 		memcpy(msg, &messageData[*tail + sizeof(Header)], messageSize);
+		Mutex myMutex(L"myMutex");
+		myMutex.Lock();
 		h->consumersLeft -= 1;
 		if (h->consumersLeft == 0)
 		{
