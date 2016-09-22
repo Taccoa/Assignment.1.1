@@ -102,7 +102,7 @@ bool CircularBuffer::push(const void * msg, size_t length)
 	{
 		Header header{ msgID++, length, padding, *clients };
 		memcpy(messageData + *head, &header, sizeof(Header));
-		memcpy(messageData + *head + sizeof(Header), msg, messageSize);
+		memcpy(messageData + *head + sizeof(Header), msg, (length + padding));
 		Mutex myMutex(L"myMutex");
 		myMutex.Lock();
 		*freeMemory -= messageSize;
@@ -126,14 +126,14 @@ bool CircularBuffer::pop(char * msg, size_t & length)
 			length = h->length;
 			size_t messageSize = sizeof(Header) + h->length + h->padding;
 
-			memcpy(msg, &messageData[inTail + sizeof(Header)], messageSize);
+			memcpy(msg, &messageData[inTail + sizeof(Header)], (h->length + h->padding));
 			inTail = (inTail + messageSize) % bufferSize;
 			Mutex myMutex(L"myMutex");
 			myMutex.Lock();
 			h->consumersLeft -= 1;
 			if (h->consumersLeft == 0)
 			{
-				*freeMemory += h->length + sizeof(Header) + h->padding;
+				*freeMemory += messageSize;
 				*tail = inTail;
 			}
 			myMutex.Unlock();
