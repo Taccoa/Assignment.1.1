@@ -27,11 +27,7 @@ public:
 
 CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const bool & isProducer, const size_t & chunkSize)
 {
-	message = new char[buffSize];
 	control = new size_t[4];
-
-	HANDLE hMapFile;
-	HANDLE controlFileMap;
 
 	hMapFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, buffSize, buffName);
 	if (hMapFile == NULL)
@@ -72,8 +68,7 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 		*freeMemory = buffSize;
 	}
 
-	CloseHandle(hMapFile);
-	CloseHandle(controlFileMap);
+	
 	
 	if (isProducer == false)
 	{
@@ -90,21 +85,22 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 
 CircularBuffer::~CircularBuffer()
 {
+	CloseHandle(hMapFile);
+	CloseHandle(controlFileMap);
 	UnmapViewOfFile(messageData);
 	UnmapViewOfFile(controlData);
-	delete[] message;
 	delete[] control;
 }
 
 bool CircularBuffer::push(const void * msg, size_t length)
 {
-	if (length < (*freeMemory - 1))
-	{
-		size_t message_head = length + sizeof(Header);
-		size_t remaining = message_head % chunkSize;
-		size_t padding = chunkSize - remaining;
-		size_t messageSize = sizeof(Header) + length + padding;
+	size_t message_head = length + sizeof(Header);
+	size_t remaining = message_head % chunkSize;
+	size_t padding = chunkSize - remaining;
+	size_t messageSize = sizeof(Header) + length + padding;
 
+	if (messageSize < (*freeMemory - 1))
+	{
 		Header header{ msgID++, length, padding, *clients};
 		memcpy(messageData + *head, &header, sizeof(Header));
 		memcpy(messageData + *head + sizeof(Header), msg, messageSize);

@@ -16,7 +16,6 @@ private:
 
 	char* messageData;
 	size_t* controlData;
-	char* message;
 	size_t* control;
 
 	size_t* head;
@@ -28,6 +27,9 @@ private:
 	size_t chunkSize;
 	
 	size_t msgID;
+
+	HANDLE hMapFile;
+	HANDLE controlFileMap;
 
 public:
 	CircularBuffer(LPCWSTR buffName, const size_t& buffSize, const bool& isProducer, const size_t& chunkSize);
