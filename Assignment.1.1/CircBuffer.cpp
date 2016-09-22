@@ -91,18 +91,6 @@ CircularBuffer::~CircularBuffer()
 	delete[] control;
 }
 
-void createDummy(char *s, const int lenght)
-{
-	static const char alphanumber[] =
-		"0";
-
-	for (auto i = 0; i < lenght; i++)
-	{
-		s[i] = alphanumber[rand() % (sizeof(alphanumber) - 1)];
-	}
-	s[lenght - 1] = 0;
-}
-
 bool CircularBuffer::push(const void * msg, size_t length)
 {
 	size_t message_head = length + sizeof(Header);
