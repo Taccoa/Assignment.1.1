@@ -22,6 +22,7 @@ private:
 	size_t* tail;
 	size_t* clients;
 	size_t* freeMemory;
+	size_t inTail;
 
 	size_t bufferSize;
 	size_t chunkSize;

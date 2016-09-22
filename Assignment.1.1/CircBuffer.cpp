@@ -66,6 +66,7 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 		*tail = 0;
 		*clients = 0;
 		*freeMemory = buffSize;
+		inTail = 0;
 	}
 
 	
@@ -124,14 +125,15 @@ bool CircularBuffer::pop(char * msg, size_t & length)
 		Header* h = (Header*)(&messageData[*tail]);
 		length = h->length;
 		size_t messageSize = sizeof(Header) + h->length + h->padding;
-		memcpy(msg, &messageData[*tail + sizeof(Header)], messageSize);
+		memcpy(msg, &messageData[inTail + sizeof(Header)], messageSize);
+		inTail = (inTail + h->length + sizeof(Header) + h->padding) % bufferSize;
 		Mutex myMutex(L"myMutex");
 		myMutex.Lock();
 		h->consumersLeft -= 1;
 		if (h->consumersLeft == 0)
 		{
 			*freeMemory += h->length + sizeof(Header) + h->padding;
-			*tail = (*tail + h->length + sizeof(Header) + h->padding) % bufferSize;
+			*tail = inTail;
 		}
 		myMutex.Unlock();
 		return true;
