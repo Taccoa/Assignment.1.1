@@ -122,11 +122,12 @@ bool CircularBuffer::pop(char * msg, size_t & length)
 	{
 		if (*head != inTail)
 		{
-			Header* h = (Header*)(&messageData[*tail]);
+			Header* h = (Header*)(&messageData[inTail]);
 			length = h->length;
 			size_t messageSize = sizeof(Header) + h->length + h->padding;
+
 			memcpy(msg, &messageData[inTail + sizeof(Header)], messageSize);
-			inTail = (inTail + h->length + sizeof(Header) + h->padding) % bufferSize;
+			inTail = (inTail + messageSize) % bufferSize;
 			Mutex myMutex(L"myMutex");
 			myMutex.Lock();
 			h->consumersLeft -= 1;
