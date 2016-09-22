@@ -66,10 +66,7 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 		*tail = 0;
 		*clients = 0;
 		*freeMemory = buffSize;
-		inTail = 0;
 	}
-
-	
 	
 	if (isProducer == false)
 	{
@@ -77,6 +74,7 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 		myMutex.Lock();
 		*clients += 1;
 		myMutex.Unlock();
+		inTail = 0;
 	}
 
 	this->chunkSize = chunkSize;
@@ -93,6 +91,18 @@ CircularBuffer::~CircularBuffer()
 	delete[] control;
 }
 
+void createDummy(char *s, const int lenght)
+{
+	static const char alphanumber[] =
+		"0";
+
+	for (auto i = 0; i < lenght; i++)
+	{
+		s[i] = alphanumber[rand() % (sizeof(alphanumber) - 1)];
+	}
+	s[lenght - 1] = 0;
+}
+
 bool CircularBuffer::push(const void * msg, size_t length)
 {
 	size_t message_head = length + sizeof(Header);
@@ -102,7 +112,7 @@ bool CircularBuffer::push(const void * msg, size_t length)
 
 	if (messageSize < (*freeMemory - 1))
 	{
-		Header header{ msgID++, length, padding, *clients};
+		Header header{ msgID++, length, padding, *clients };
 		memcpy(messageData + *head, &header, sizeof(Header));
 		memcpy(messageData + *head + sizeof(Header), msg, messageSize);
 		Mutex myMutex(L"myMutex");
