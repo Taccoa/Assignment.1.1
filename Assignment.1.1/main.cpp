@@ -86,6 +86,7 @@ void Producer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize
 		}
 	};
 	Sleep(1000);
+	delete[] buff;
 }
 
 void Consumer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize)
