@@ -79,7 +79,6 @@ void Producer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize
 			if (producer.push(buff, messageSize))
 			{
 				counter++;
-				//cout << buff << endl;
 				break;
 			}
 			else
@@ -110,7 +109,6 @@ void Consumer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize
 		if (consumer.pop(msg, len0))
 		{
 			counter++;
-			//cout << msg << endl;
 		}
 		else
 		{
