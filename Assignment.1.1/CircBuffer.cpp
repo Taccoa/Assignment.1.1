@@ -79,7 +79,7 @@ CircularBuffer::CircularBuffer(LPCWSTR buffName, const size_t & buffSize, const 
 
 	this->chunkSize = chunkSize;
 	bufferSize = buffSize;
-	msgID = 0;
+	msgID = 1;
 }
 
 CircularBuffer::~CircularBuffer()
@@ -97,8 +97,27 @@ bool CircularBuffer::push(const void * msg, size_t length)
 	size_t remaining = message_head % chunkSize;
 	size_t padding = chunkSize - remaining;
 	size_t messageSize = sizeof(Header) + length + padding;
+	size_t memoryLeft = bufferSize - *head;
 
-	if (messageSize < (*freeMemory - 1))
+	if (messageSize > memoryLeft)
+	{
+		if (*tail != 0)
+		{
+			size_t dummySize = memoryLeft - sizeof(Header);
+
+			Header header{ 0, dummySize, 0, *clients };
+			memcpy(messageData + *head, &header, sizeof(Header));
+			Mutex myMutex(L"myMutex");
+			myMutex.Lock();
+			*freeMemory -= (dummySize + sizeof(Header));
+			*head = 0;
+			myMutex.Unlock();
+			return false;
+		}
+		else
+			return false;
+	}
+	else if (messageSize < (*freeMemory - 1))
 	{
 		Header header{ msgID++, length, padding, *clients };
 		memcpy(messageData + *head, &header, sizeof(Header));
@@ -125,19 +144,35 @@ bool CircularBuffer::pop(char * msg, size_t & length)
 			Header* h = (Header*)(&messageData[inTail]);
 			length = h->length;
 			size_t messageSize = sizeof(Header) + h->length + h->padding;
-
-			memcpy(msg, &messageData[inTail + sizeof(Header)], h->length);
-			inTail = (inTail + messageSize) % bufferSize;
-			Mutex myMutex(L"myMutex");
-			myMutex.Lock();
-			h->consumersLeft -= 1;
-			if (h->consumersLeft == 0)
+			if (h->id == 0)
 			{
-				*freeMemory += messageSize;
-				*tail = inTail;
+				inTail = 0;
+				Mutex myMutex(L"myMutex");
+				myMutex.Lock();
+				h->consumersLeft -= 1;
+				if (h->consumersLeft == 0)
+				{
+					*freeMemory += messageSize;
+					*tail = inTail;
+				}
+				myMutex.Unlock();
+				return false;
 			}
-			myMutex.Unlock();
-			return true;
+			else
+			{
+				memcpy(msg, &messageData[inTail + sizeof(Header)], h->length);
+				inTail = (inTail + messageSize) % bufferSize;
+				Mutex myMutex(L"myMutex");
+				myMutex.Lock();
+				h->consumersLeft -= 1;
+				if (h->consumersLeft == 0)
+				{
+					*freeMemory += messageSize;
+					*tail = inTail;
+				}
+				myMutex.Unlock();
+				return true;
+			}
 		}
 		else
 		{
