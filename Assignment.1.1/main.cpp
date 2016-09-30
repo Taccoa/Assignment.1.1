@@ -100,12 +100,12 @@ void Consumer(DWORD delay, size_t memorySize, size_t numMessages, size_t msgSize
 	int counter = 0;
 	size_t len0 = 0;
 
-	memset(msg, '\0', maxMessageSize);
-
 	while (counter < numMessages)
 	{
 		if (delay > 0)
 			Sleep(delay);
+
+		memset(msg, '\0', maxMessageSize);
 
 		if (consumer.pop(msg, len0))
 		{
